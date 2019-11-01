@@ -6,7 +6,7 @@ const projectDB = require('./projectModel');
 const router = express.Router();
 
 /****************************** MIDDLEWARE ******************************/
-// VALIDATES ACTION INFO AND ID
+// VALIDATES ACTION INFO
 function validateAction(req, res, next) {
   const { description, notes } = req.body;
   if(description === undefined || notes === undefined){
@@ -18,6 +18,7 @@ function validateAction(req, res, next) {
   }
 }
 
+// VALIDATES ACTION ID
 function validateActionId(req, res, next) {
   const id = req.params.id;
   db.get(id)
@@ -27,6 +28,9 @@ function validateActionId(req, res, next) {
       }else{
         next()
       }
+    })
+    .catch(err => {
+      res.status(500).json({ error: 'internal server error' })
     })
 }
 
@@ -88,5 +92,18 @@ router.put('/:id', [validateAction, validateActionId], (req, res) => {
 })
 
 // DELETE ACTION (ID)
+router.delete('/:id', validateActionId, (req, res) => {
+  const id = req.params.id;
+  db.get(id)
+    .then(actionObj => {
+      db.remove(id)
+      .then(deletedAction => {
+        res.status(200).json(actionObj)
+      })
+      .catch(err => {
+        res.status(500).json({ error: 'internal server error' })
+      })
+    })
+})
 
 module.exports = router;
