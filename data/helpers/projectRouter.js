@@ -58,7 +58,6 @@ router.get('/:id', validateProjectId, (req, res) => {
 
 // POST PROJECT(NAME AND DESCRIPTION)
 router.post('/', validateProject, (req, res) => {
-  // const project = req.body;
   db.insert(req.body)
     .then(newProject => {
       res.status(200).json(newProject)
@@ -69,12 +68,43 @@ router.post('/', validateProject, (req, res) => {
 })
 
 // UPDATE PROJECT(ID, NAME, AND DESCRIPTION)
-
+router.put('/:id', [validateProject, validateProjectId], (req, res) => {
+  db.update(req.params.id, req.body)
+    .then(updatedProject => {
+      res.status(200).json(updatedProject)
+    })
+    .catch(err => {
+      res.status(500).json({ error: 'internal server error' })
+    })
+})
 
 // DELETE PROJECT(ID)
-
+router.delete('/:id', validateProjectId, (req, res) => {
+  db.get(req.params.id)
+    .then(deletedProject => {
+      db.remove(req.params.id)
+      .then(project => {
+        res.status(200).json(deletedProject)
+      })
+      .catch(err => {
+        res.status(500).json({ error: 'internal server error' })
+      })
+    })
+})
 
 // GET ALL ACTIONS OF A SPECIFIED PROJECT(ID)
-
+router.get('/:id/actions', validateProjectId, (req, res) => {
+  db.getProjectActions(req.params.id)
+    .then(actions => {
+      if(!actions[0]){
+        res.status(400).json({ error: 'this project has no actions'})
+      }else{
+        res.status(200).json(actions)
+      }
+    })
+    .catch(err => {
+      res.status(500).json({ error: 'internal server error' })
+    })
+})
 
 module.exports = router;
